@@ -1,0 +1,59 @@
+#include <DHT.h>
+
+#define DHTPIN 27
+#define DHTTYPE DHT11
+
+#define ENA 25      // Motor enable (PWM pin)
+#define IN1 26
+#define IN2 33
+
+#define TEMP_THRESHOLD 30
+#define PWM_FREQ 5000
+#define PWM_RES 8
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+
+  // ESP32 new PWM API
+  ledcAttach(ENA, PWM_FREQ, PWM_RES);
+}
+
+void loop() {
+  float temp = dht.readTemperature();
+
+  if (isnan(temp)) {
+    Serial.println("Failed to read from DHT sensor!");
+    delay(2000);
+    return;
+  }
+
+  Serial.print("Temperature: ");
+  Serial.print(temp);
+  Serial.println(" °C");
+
+  if (temp >= TEMP_THRESHOLD) {
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+
+    int speed = map(temp, TEMP_THRESHOLD, 40, 150, 255);
+    speed = constrain(speed, 150, 255);
+
+    ledcWrite(ENA, speed);
+
+    Serial.print("Fan ON | Speed: ");
+    Serial.println(speed);
+  } else {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, LOW);
+    ledcWrite(ENA, 0);
+    Serial.println("Fan OFF");
+  }
+
+  delay(2000);
+}
