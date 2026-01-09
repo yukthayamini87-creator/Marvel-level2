@@ -1,0 +1,30 @@
+#define PULSE_SENSOR 34  // DO pin of pulse sensor
+
+unsigned long lastBeat = 0;      // Time of last detected beat
+float bpm = 0;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PULSE_SENSOR, INPUT);
+  Serial.println("❤️ Pulse Sensor Started ❤️");
+}
+
+void loop() {
+  int pulseValue = digitalRead(PULSE_SENSOR);  // Read digital signal
+
+  if (pulseValue == HIGH) { // Beat detected
+    unsigned long currentTime = millis();
+    unsigned long interval = currentTime - lastBeat; // Time since last beat in ms
+
+    if (interval > 300) { // Avoid false triggers (ignore too fast)
+      bpm = 60000.0 / interval; // Convert ms interval to BPM
+      Serial.print("💓 Heart Rate: ");
+      Serial.print(bpm);
+      Serial.println(" BPM");
+      lastBeat = currentTime;
+    }
+
+    // Wait a tiny bit to avoid multiple counts for same beat
+    delay(50);
+  }
+}
