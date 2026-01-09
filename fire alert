@@ -1,0 +1,32 @@
+#define FLAME_SENSOR 34  // Flame sensor pin
+#define LED 26           // LED pin
+
+void setup() {
+  Serial.begin(115200);      // Start Serial Monitor
+  pinMode(FLAME_SENSOR, INPUT);
+  pinMode(LED, OUTPUT);
+  Serial.println("🔥 Fire Alarm System Started 🔥");
+}
+
+void loop() {
+  int flameDetected = digitalRead(FLAME_SENSOR);
+
+  if (flameDetected == LOW) {  // Fire detected
+    Serial.println("🚨 FIRE DETECTED! Take action immediately!");
+
+    // Blink LED 5 times
+    for(int i = 0; i < 5; i++) {
+      digitalWrite(LED, HIGH);
+      delay(300);  // LED ON for 300ms
+      digitalWrite(LED, LOW);
+      delay(300);  // LED OFF for 300ms
+    }
+
+    delay(2000); // Delay before next detection to avoid flooding Serial
+  } 
+  else {
+    digitalWrite(LED, LOW);    // LED OFF when no fire
+  }
+
+  delay(500);  // Check sensor twice per second
+}
