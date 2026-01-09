@@ -1,0 +1,93 @@
+const int ledPins[4] = {27, 13, 12, 14};      // Yellow, Red, Green, Blue
+const int buttonPins[4] = {32, 26, 25, 33};   // Buttons for each LED
+const int buzzerPin = 15;
+
+int pattern[10];
+int level = 1;
+int score = 0;
+
+void setup() {
+  Serial.begin(115200);
+  for (int i = 0; i < 4; i++) {
+    pinMode(ledPins[i], OUTPUT);
+    digitalWrite(ledPins[i], LOW); // OFF
+    pinMode(buttonPins[i], INPUT_PULLUP);
+  }
+  pinMode(buzzerPin, OUTPUT);
+  randomSeed(millis());
+  delay(1000);
+  Serial.println("Simon Says Game Started!");
+}
+
+void showPattern() {
+  Serial.print("Level ");
+  Serial.println(level);
+  for (int i = 0; i < level; i++) {
+    int index = random(0, 4);
+    pattern[i] = index;
+
+    digitalWrite(ledPins[index], HIGH); // ON
+    tone(buzzerPin, 1000 + index * 200);
+    delay(300);
+    digitalWrite(ledPins[index], LOW); // OFF
+    noTone(buzzerPin);
+    delay(250);
+  }
+}
+
+bool readUserInput() {
+  for (int i = 0; i < level; i++) {
+    bool pressed = false;
+    while (!pressed) {
+      for (int j = 0; j < 4; j++) {
+        if (digitalRead(buttonPins[j]) == LOW) {
+          Serial.print("Button pressed: ");
+          Serial.println(j);
+
+          digitalWrite(ledPins[j], HIGH); // ON
+          tone(buzzerPin, 1000 + j * 200);
+          delay(300);
+          digitalWrite(ledPins[j], LOW); // OFF
+          noTone(buzzerPin);
+
+          while (digitalRead(buttonPins[j]) == LOW); // Wait for release
+          delay(50);
+
+          if (j != pattern[i]) {
+            return false;
+          }
+
+          pressed = true;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+void loop() {
+  showPattern();
+  bool correct = readUserInput();
+
+  if (correct) {
+    score++;
+    level++;
+    Serial.println("✅ Correct!");
+    Serial.print("Score: ");
+    Serial.println(score);
+    tone(buzzerPin, 1500);
+    delay(500);
+    noTone(buzzerPin);
+  } else {
+    Serial.println("❌ Wrong!");
+    Serial.print("Final Score: ");
+    Serial.println(score);
+    tone(buzzerPin, 400);
+    delay(1000);
+    noTone(buzzerPin);
+    level = 1;
+    score = 0;
+  }
+
+  delay(1000);
+}
